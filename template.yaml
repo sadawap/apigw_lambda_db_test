@@ -1,0 +1,252 @@
+# ============================================================
+# Backstage Template: API Gateway + Lambda + DynamoDB
+# ============================================================
+
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+
+# -----------------------------
+# Metadata
+# -----------------------------
+metadata:
+  name: apigw-lambda-db
+  title: Api Gateway with Lambda and DynamoDB
+  description: Template to create backend repository for API Gateway, Lambda, and DynamoDB
+  tags:
+    - backend
+
+# -----------------------------
+# Specification
+# -----------------------------
+spec:
+  owner: group:default/ascentt_devhub_team
+  type: service
+
+  # ============================================================
+  # PARAMETERS SECTION
+  # ============================================================
+  parameters:
+    # -----------------------------
+    # Lambda Function Configuration
+    # -----------------------------
+    - title: Lambda Function Configuration
+      required:
+        - lambda_name
+        - lambda_runtime
+        - lambda_handler
+        - lambda_source_file
+      properties:
+        lambda_name:
+          title: Lambda Name
+          type: string
+          description: Name of the Lambda function
+
+        lambda_runtime:
+          title: Lambda Runtime
+          type: string
+          default: "python3.11"
+          description: Lambda runtime (e.g., python3.11)
+
+        lambda_handler:
+          title: Lambda Handler
+          type: string
+          default: "lambda_function.lambda_handler"
+          description: Lambda entry point
+
+        lambda_source_file:
+          title: Lambda Source File
+          type: string
+          default: "src/lambda_function.py"
+          description: Path to the lambda source file
+
+        lambda_layers:
+          title: Lambda Layers
+          type: array
+          items:
+            type: string
+          default: []
+          description: |
+            List of Lambda Layer ARNs to attach.  
+            Example:  
+            - arn:aws:lambda:us-east-1:123456789012:layer:layer1:1  
+            - arn:aws:lambda:us-east-1:123456789012:layer:layer2:2
+
+    # -----------------------------
+    # API Gateway Configuration
+    # -----------------------------
+    - title: API Gateway Configuration
+      required:
+        - api_name
+        - stage_name
+        - http_method
+        - api_path_part
+      properties:
+        api_name:
+          title: API Name
+          type: string
+          description: Name of the API Gateway
+
+        stage_name:
+          title: Stage Name
+          type: string
+          default: "dev"
+          description: API Gateway stage (e.g., dev, prod)
+
+        http_method:
+          title: HTTP Method
+          type: string
+          default: "ANY"
+          description: HTTP method for API Gateway
+
+        api_path_part:
+          title: API Path Part
+          type: string
+          default: "api"
+          description: Base path for API Gateway
+
+    # -----------------------------
+    # DynamoDB Table Configuration
+    # -----------------------------
+    - title: DynamoDB Table Configuration
+      required:
+        - table_name
+        - partition_key
+      properties:
+        table_name:
+          title: DynamoDB Table Name
+          type: string
+          description: Name of the DynamoDB table
+
+        partition_key:
+          title: Partition Key
+          type: string
+          default: "id"
+          description: Primary partition key of the table
+
+        sort_key:
+          title: Sort Key
+          type: string
+          default: ""
+          description: Optional sort key for the table
+
+    # -----------------------------
+    # General Project Settings
+    # -----------------------------
+    - title: General Project Settings
+      required:
+        - application_name
+        - environment
+        - team
+        - region
+        - cost_project
+      properties:
+        application_name:
+          title: Application Name
+          type: string
+          description: A unique identifier for your application.
+
+        environment:
+          title: Environment
+          type: string
+          default: "dev"
+          description: Deployment environment (e.g., dev, qa, prod)
+
+        team:
+          title: Team
+          type: string
+          default: "devops"
+          description: Team or owner of the application
+
+        region:
+          title: AWS Region
+          type: string
+          default: "us-east-1"
+          description: AWS region for deployment
+
+        cost_project:
+          title: Cost Project
+          type: string
+          description: Cost center or billing tag for the project
+
+    # -----------------------------
+    # Repository Location
+    # -----------------------------
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - Ascentt-Business-Systems
+
+  # ============================================================
+  # STEPS SECTION
+  # ============================================================
+  steps:
+    # -----------------------------
+    # Step 1: Fetch Base Template
+    # -----------------------------
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skelton
+        copyWithoutRender:
+          - .github/workflows/*
+        values:
+          application_name: ${{ parameters.application_name }}
+          lambda_name: ${{ parameters.lambda_name }}
+          lambda_runtime: ${{ parameters.lambda_runtime }}
+          lambda_handler: ${{ parameters.lambda_handler }}
+          lambda_source_file: ${{ parameters.lambda_source_file }}
+          lambda_layers: ${{ parameters.lambda_layers }}
+          api_name: ${{ parameters.api_name }}
+          stage_name: ${{ parameters.stage_name }}
+          http_method: ${{ parameters.http_method }}
+          api_path_part: ${{ parameters.api_path_part }}
+          table_name: ${{ parameters.table_name }}
+          partition_key: ${{ parameters.partition_key }}
+          sort_key: ${{ parameters.sort_key }}
+          environment: ${{ parameters.environment }}
+          team: ${{ parameters.team }}
+          region: ${{ parameters.region }}
+          cost_project: ${{ parameters.cost_project }}
+          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+          repoUrl: ${{ parameters.repoUrl }}
+
+    # -----------------------------
+    # Step 2: Publish to GitHub
+    # -----------------------------
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        description: This is ${{ parameters.application_name }} backend repository
+        repoUrl: ${{ parameters.repoUrl }}
+
+    # -----------------------------
+    # Step 3: Register in Catalog
+    # -----------------------------
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: "/catalog-info.yaml"
+
+  # ============================================================
+  # OUTPUT SECTION
+  # ============================================================
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}

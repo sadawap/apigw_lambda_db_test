@@ -1,18 +1,19 @@
 name: Build and Deploy Backstage Backend
-
+ 
 on:
   push:
     branches:
-      - main
-      - master
-
+      - "**"
+ 
 permissions:
   id-token: write
   contents: read
-
+ 
 env:
   TF_WORKING_DIR: ./deploy
-
+ 
 jobs:
   build-and-deploy: 
-    uses: Ascentt-Business-Systems/ascentt-mlops-github-actions/.github/workflows/cd-terraform.yml@feature/dev
+    uses: Ascentt-Business-Systems/ascentt-mlops-github-actions/.github/workflows/cd-terraform-standalone.yml@feature/dev
+    with:
+      branch: ${{ github.ref_name }}

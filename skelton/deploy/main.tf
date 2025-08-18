@@ -11,7 +11,7 @@ terraform {
 }
 
 module "apigw_lambda_db_deployment" {
-  source = "git::https://github.com/Ascentt-Business-Systems/Ascentt-infra.git//deployment_patterns/apigw_lambda_db_deployment?ref=main"
+  source = "git::https://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@github.com/Ascentt-Business-Systems/Ascentt-infra.git//deployment_patterns/apigw_lambda_db_deployment?ref=main"
 
   # Lambda function
   lambda_name        = var.lambda_name

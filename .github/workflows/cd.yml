@@ -9,7 +9,7 @@ permissions:
 env:
   TF_WORKING_DIR: ./deploy
 jobs:
-  build-and-deploy: 
+  build-and-deploy:
     uses: Ascentt-Business-Systems/ascentt-mlops-github-actions/.github/workflows/cd-terraform-standalone.yml@feature/dev
     with:
       branch: ${{ github.ref_name }}

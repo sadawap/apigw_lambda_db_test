@@ -1,19 +1,19 @@
 name: Deploy Terraform Standalone
+
 on:
   push:
     branches:
       - "**"
-    paths-ignore:
-      - .github/workflows/**
-  workflow_dispatch: null
-  create: null
+
 permissions:
   id-token: write
   contents: read
+
 env:
   TF_WORKING_DIR: ./deploy
+
 jobs:
-  build-and-deploy: 
+  build-and-deploy:
     uses: Ascentt-Business-Systems/ascentt-mlops-github-actions/.github/workflows/cd-terraform-standalone.yml@feature/dev
     with:
       branch: ${{ github.ref_name }}

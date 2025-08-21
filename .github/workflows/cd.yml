@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - "**"
+    paths-ignore:
+      - .github/workflows/**
+  workflow_dispatch: null
+  create: null
 permissions:
   id-token: write
   contents: read
